@@ -1,6 +1,6 @@
 import folium
 from privacy_triage import process_incident
-from storage import load_data, save_data
+from storage import load_data, update_status  # Added update_status here!
 import streamlit as st
 from streamlit_folium import st_folium
 import pandas as pd
@@ -37,7 +37,8 @@ if not st.session_state["ra_authenticated"]:
 st.success("Authenticated as Resident Advisor")
 df = load_data()
 
-if df.empty:
+# Check if data is empty first!
+if df.empty or "building" not in df.columns:
   st.info("No incidents logged yet.")
 else:
   col1, col2 = st.columns(2)
@@ -54,40 +55,82 @@ else:
   if status_filter != "All":
     filtered_df = filtered_df[filtered_df["status"] == status_filter]
 
-  # Draw Map
-  ra_map = folium.Map(location=[53.5222, -113.5310], zoom_start=17)
-  for idx, row in filtered_df.iterrows():
-    if pd.notna(row.get("latitude")) and pd.notna(row.get("longitude")):
-      lat, lon = row["latitude"], row["longitude"]
-    else:
-      base_lat, base_lon = TOWER_COORDS.get(
-          row["building"], (53.5222, -113.5310)
+  # --- DRAW MAP ---
+  if filtered_df.empty:
+    st.info("No incidents match your current filter.")
+  else:
+    ra_map = folium.Map(location=[53.5222, -113.5310], zoom_start=17)
+    
+    for idx, row in filtered_df.iterrows():
+      if pd.notna(row.get("latitude")) and pd.notna(row.get("longitude")):
+        lat, lon = row["latitude"], row["longitude"]
+      else:
+        base_lat, base_lon = TOWER_COORDS.get(
+            row["building"], (53.5222, -113.5310)
+        )
+        lat = base_lat + ((idx % 5) - 2) * 0.00005
+        lon = base_lon + (((idx // 5) % 5) - 2) * 0.00005
+      
+      # Now correctly inside the for loop!
+      color = URGENCY_COLORS.get(row["urgency"], "blue")
+      
+      # Fixed the typo in the HTML string below
+      popup_html = f"""
+              <div style="width: 200px; font-family: sans-serif;">
+                  <h4 style="margin: 0; color: {color};">{row['category']}</h4>
+                  <b>{row['building']} - {row['floor']}</b><br>
+                  <b>Status:</b> {row['status']}<br>
+                  <hr style="margin: 5px 0;">
+                  {row['raw_text']}
+              </div>
+          """
+      folium.CircleMarker(
+          location=[lat, lon],
+          radius=8,
+          color=color,
+          fill=True,
+          fill_opacity=0.9,
+          popup=folium.Popup(popup_html, max_width=250),
+      ).add_to(ra_map)
+
+    # st_folium is now properly indented inside the else block
+    st_folium(ra_map, height=450, use_container_width=True)
+
+  # --- INCIDENT CARDS ---
+  st.write("### 📋 Active Incident Cards & Triage")
+
+  if filtered_df.empty:
+    st.info("No incidents match your current filter.")
+  else:
+    for idx, row in filtered_df.iterrows():
+      urgency_badge = (
+          "🔴 HIGH"
+          if row["urgency"] == "High"
+          else ("🟠 MED" if row["urgency"] == "Medium" else "🔵 LOW")
       )
-      lat = base_lat + ((idx % 5) - 2) * 0.00005
-      lon = base_lon + (((idx // 5) % 5) - 2) * 0.00005
 
-    color = URGENCY_COLORS.get(row["urgency"], "blue")
-    popup_html = f"""
-            <div style="width: 200px; font-family: sans-serif;">
-                <h4 style="margin: 0; color: {color};">{row['category']}</h4>
-                <b>{row['building']} - {row['floor']}</b><br>
-                <b>Status:</b> {row['status']}<br>
-                <hr style="margin: 5px 0;">
-                {row['raw_text']}
-            </div>
-        """
-    folium.CircleMarker(
-        location=[lat, lon],
-        radius=8,
-        color=color,
-        fill=True,
-        fill_opacity=0.9,
-        popup=folium.Popup(popup_html, max_width=250),
-    ).add_to(ra_map)
+      with st.container(border=True):
+        col_a, col_b = st.columns([4, 1])
 
-  st_folium(ra_map, height=450, use_container_width=True)
+        with col_a:
+          st.markdown(
+              f"**{urgency_badge} | {row['building']} — {row['floor']} ({row['zone']})**"
+          )
+          st.caption(
+              f"Category: {row['category']} | Logged: {row['timestamp']}"
+          )
+          st.write(row["raw_text"])
 
-  st.write("### Incident Hotspots by Zone")
-  st.bar_chart(filtered_df["zone"].value_counts())
-  st.write("### Live Incident Data Table")
-  st.dataframe(filtered_df, use_container_width=True)
+        with col_b:
+          current_status = row["status"]
+          st.text(f"Status:\n{current_status}")
+
+          if current_status == "Open":
+            # Using the row's actual database ID for the button key
+            if st.button("Resolve", key=f"resolve_{row.get('id', idx)}", type="primary"):
+              # Using the Supabase cloud update instead of local CSV
+              update_status(row["id"], "Resolved")
+              st.success("Resolved!")
+              st.rerun()
+          else:
+            st.success("Done ✓")

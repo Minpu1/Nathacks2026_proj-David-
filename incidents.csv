@@ -1,7 +1,7 @@
 timestamp,building,floor,zone,scrubbed_text,category,urgency,status,latitude,longitude,raw_text
-2026-11-06 22:14,Henday Hall,Floor 7,West Stairwell,Someone propped the fire door open with a textbook near [ROOM REDACTED].,Urgent Safety,High,Open,,,
-2026-11-06 23:05,Henday Hall,Floor 7,West Stairwell,The emergency exit door in the stairwell isn't latching properly and cold air is blowing in.,Urgent Safety,High,Open,,,
-2026-11-07 00:42,Henday Hall,Floor 7,West Stairwell,Heard people running up the stairwell and the security door alarm was muffled with tape.,Urgent Safety,High,Open,,,
+2026-11-06 22:14,Henday Hall,Floor 7,West Stairwell,Someone propped the fire door open with a textbook near [ROOM REDACTED].,Urgent Safety,High,Resolved,,,
+2026-11-06 23:05,Henday Hall,Floor 7,West Stairwell,The emergency exit door in the stairwell isn't latching properly and cold air is blowing in.,Urgent Safety,High,Resolved,,,
+2026-11-07 00:42,Henday Hall,Floor 7,West Stairwell,Heard people running up the stairwell and the security door alarm was muffled with tape.,Urgent Safety,High,Resolved,,,
 2026-11-07 01:18,Henday Hall,Floor 7,West Stairwell,Unfamiliar person asking to be let onto the floor from the stairwell door.,Urgent Safety,High,Open,,,
 2026-11-06 23:30,Shaffer Hall,Floor 11,Main Lounge,Large group playing loud music on a Bluetooth speaker in the lounge past quiet hours.,RA Next-Shift (Noise/Policy),Low,Open,,,
 2026-11-07 00:15,Shaffer Hall,Floor 11,Main Lounge,Students from [ROOM REDACTED] and [ROOM REDACTED] yelling during video games in the common area.,RA Next-Shift (Noise/Policy),Low,Open,,,
@@ -40,18 +40,12 @@ timestamp,building,floor,zone,scrubbed_text,category,urgency,status,latitude,lon
 2026-11-07 07:55,Shaffer Hall,Floor 2,Study Room,Window latch is broken so cold draft is coming into the study room.,Maintenance,Medium,Open,,,
 2026-11-06 20:00,Chalifoux Hall,Floor 1,Main Lounge,Vending machine ate $5 and the glass front looks cracked.,Maintenance,Medium,Open,,,
 2026-11-06 22:55,Chalifoux Hall,Floor 5,South Wing,People blasting music near [ROOM REDACTED] past quiet hours.,RA Next-Shift (Noise/Policy),Low,Open,,,
-2026-11-07 00:10,Chalifoux Hall,Floor 2,West Stairwell,Side entrance door at the bottom of the stairwell didn't close all the way.,Urgent Safety,High,Open,,,
+2026-11-07 00:10,Chalifoux Hall,Floor 2,West Stairwell,Side entrance door at the bottom of the stairwell didn't close all the way.,Urgent Safety,High,Resolved,,,
 2026-11-07 01:25,Chalifoux Hall,Floor 4,Main Lounge,Board game night still going very loudly in the 4th floor lounge.,RA Next-Shift (Noise/Policy),Low,Resolved,,,
-2026-11-07 11:17,Lister Centre,Floor 1,North Wing,,RA Next-Shift (Noise/Policy),Low,Open,53.52196694343844,-113.53047235911792,
-2026-11-07 11:17,Henday Hall,Floor 1,North Wing,,RA Next-Shift (Noise/Policy),Low,Open,53.52185850966463,-113.53064387814584,
-2026-11-07 11:30,Henday Hall,Floor 1,North Wing,Urgent Safety,High,53.52071674896369,Open,-113.5315979332144,,Broken door
-2026-11-07 11:31,Henday Hall,Floor 1,North Wing,RA Next-Shift (Noise/Policy),Low,53.5224835946666,Open,-113.5307082569922,,
-2026-11-07 12:17,Chalifoux Hall,Floor 1,North Wing,RA Next-Shift (Noise/Policy),Low,53.52131633663224,Open,-113.5315770565983,,Room noise lb
-2026-11-07 12:24,Henday Hall,Floor 1,North Wing,RA Next-Shift (Noise/Policy),Low,53.52202434944163,Open,-113.53046147886266,,
-2026-11-07 13:15,Henday Hall,Floor 1,North Wing,67676767,RA Next-Shift (Noise/Policy),Low,Open,53.52138012205502,-113.53153444170198,67676767
-2026-11-07 14:51,Shaffer Hall,Floor 4,South Wing,doobeedoo,RA Next-Shift (Noise/Policy),Low,Open,53.52245489198589,-113.53148601280115,doobeedoo
-2026-11-07 15:07,Henday Hall,Floor 1,North Wing,DRTYGBHUIJGH,RA Next-Shift (Noise/Policy),Low,Open,,,DRTYGBHUIJGH
-2026-11-07 15:08,Henday Hall,Floor 1,North Wing,KJKOKLK,RA Next-Shift (Noise/Policy),Low,Open,,,KJKOKLK
-2026-11-07 15:17,Henday Hall,Floor 1,North Wing,s,RA Next-Shift (Noise/Policy),Low,Open,53.52107395114981,-113.53050230295467,s
-2026-11-07 15:21,Kelsey Hall,Floor 5,West Stairwell,eghoureo,RA Next-Shift (Noise/Policy),Low,Open,82.1183836069127,-394.4104880341208,eghoureo
-2026-11-07 15:28,Henday Hall,Floor 1,North Wing,fssfsf,RA Next-Shift (Noise/Policy),Low,Open,,,fssfsf
+2026-11-07 11:17,Lister Centre,Floor 1,North Wing,,RA Next-Shift (Noise/Policy),Low,Resolved,53.521966943438436,-113.53047235911791,
+2026-11-07 11:17,Henday Hall,Floor 1,North Wing,,RA Next-Shift (Noise/Policy),Low,Resolved,53.521858509664625,-113.53064387814584,
+2026-11-07 11:30,Henday Hall,Floor 1,North Wing,Urgent Safety,High,53.52071674896369,Open,-113.53159793321439,,Broken door
+2026-11-07 11:31,Henday Hall,Floor 1,North Wing,RA Next-Shift (Noise/Policy),Low,53.5224835946666,Resolved,-113.5307082569922,,
+2026-11-07 12:17,Chalifoux Hall,Floor 1,North Wing,RA Next-Shift (Noise/Policy),Low,53.52131633663224,Resolved,-113.5315770565983,,Room noise lb
+2026-11-07 12:24,Henday Hall,Floor 1,North Wing,RA Next-Shift (Noise/Policy),Low,53.52202434944163,Resolved,-113.53046147886266,,
+2026-11-07 13:15,Henday Hall,Floor 1,North Wing,67676767,RA Next-Shift (Noise/Policy),Low,Resolved,53.52138012205502,-113.53153444170198,67676767
