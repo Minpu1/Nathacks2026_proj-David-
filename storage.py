@@ -77,3 +77,19 @@ def update_status(row_id, new_status):
   except Exception as e:
     st.error(f"⚠️ Failed to update status: {e}")
     return False  
+
+def check_duplicate(building, floor, category):
+    """Checks if an open incident of the same category exists in that location."""
+    if supabase is None:
+        return False
+        
+    try:
+        # Query for Open incidents in the same building, floor, and category
+        response = supabase.table("incidents").select("id").eq("status", "Open").eq("building", building).eq("floor", floor).eq("category", category).execute()
+        
+        # If the database returns any rows, a duplicate exists
+        if len(response.data) > 0:
+            return True
+        return False
+    except Exception as e:
+        return False
