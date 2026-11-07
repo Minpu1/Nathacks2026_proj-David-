@@ -3,6 +3,7 @@ import pandas as pd
 from supabase import create_client
 import streamlit as st
 
+<<<<<<< HEAD
 # Initialize Supabase client safely with error catching
 try:
   url = st.secrets["SUPABASE_URL"]
@@ -58,6 +59,25 @@ def save_data(building, floor, zone, raw_text, scrubbed_text, category, urgency,
         "status": "Open",
         "latitude": lat,
         "longitude": lon
+=======
+FILE_PATH = "incidents.csv"
+COLUMNS = ["timestamp", "building", "floor", "zone", "scrubbed_text",
+           "category", "urgency", "status", "latitude", "longitude"]
+
+def load_data():
+    if not os.path.exists(FILE_PATH) or os.path.getsize(FILE_PATH) == 0:
+        return pd.DataFrame(columns=COLUMNS)
+    return pd.read_csv(FILE_PATH).drop(columns=["raw_text"], errors="ignore")
+
+def save_data(building, floor, zone, scrubbed_text, category, urgency, lat=None, lon=None):
+    df = load_data()
+    new_row = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "building": building, "floor": floor, "zone": zone,
+        "scrubbed_text": scrubbed_text, "category": category,
+        "urgency": urgency, "status": "Open",
+        "latitude": lat, "longitude": lon,
+>>>>>>> main
     }
     supabase.table("incidents").insert(new_row).execute()
     return True
