@@ -103,6 +103,9 @@ else:
     st_folium(ra_map, height=450, use_container_width=True)
 
   # --- INCIDENT CARDS ---
+
+@st.fragment
+def render_triage_board(dataframe):
   st.write("### 📋 Active Incident Cards & Triage")
 
   if filtered_df.empty:
