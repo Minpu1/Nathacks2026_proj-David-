@@ -9,7 +9,7 @@ Residence safety and maintenance relies heavily on fragmented communication. Stu
 
 ## The Solution
 *   📱 **Student Mobile Interface:** A streamlined, mobile-friendly reporting tool that allows students to document incidents, tag specific building zones, and drop custom location pins via an interactive map.
-*   🛡️ **Privacy-First Triage:** The app automatically scrubs sensitive Personal Identifiable Information (PII) like phone numbers and student IDs locally before saving the report, protecting reporters while keeping essential data (like room numbers) intact for actionable response.
+
 *   🗺️ **Interactive Patrol Map:** RAs access a live dashboard with an OpenStreetMap overlay (powered by Folium) that clusters incidents over the exact footprints of the residence towers, color-coded by urgency.
 *   📊 **Shift Handoff Dashboard:** Visualizes incident hotspots by zone and allows RAs to filter by building or status, ensuring a clean transition between shifts.
 
