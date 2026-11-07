@@ -8,7 +8,7 @@ By processing pixels on the edge, this project eliminates the **Downlink Bottlen
 ## 🚀 The Problem & Our Solution
 
 - **The Problem:** Satellites capture terabytes of data daily, but over **70% of it is obscured by clouds** or contains empty features. Sending these raw, useless gigabytes to Earth wastes expensive radio channel bandwidth and delays critical imaging tasks.
-- **Our Solution:** Instead of heavy, energy-draining Deep Learning models that drain space batteries, we built a lightning-fast image analyzer using pure linear algebra and pixel matrix manipulation. It determines an image's worthiness in milliseconds using minimal CPU/RAM.
+- **Our Solution:** Instead of heavy, energy-draining Deep Learning models that drain space batteries, we built a fast image analyzer using pure linear algebra and pixel matrix manipulation. It determines an image's worthiness in milliseconds using minimal CPU/RAM.
 
 ---
 
