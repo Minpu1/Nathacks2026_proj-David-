@@ -172,7 +172,7 @@ if st.button("Submit confidential report", type="primary"):
         st.warning("Please describe what happened first.")
     else:
         result = process_incident(raw_text)
-        save_data(
+        saved = save_data(
             building,
             floor,
             zone,
@@ -183,5 +183,7 @@ if st.button("Submit confidential report", type="primary"):
             st.session_state["lat"],
             st.session_state["lon"],
         )
+        if saved is False:
+            st.stop()  # storage.py already showed the error message
         st.session_state["ref"] = f"R-{len(load_data()):04d}"
         st.rerun()
