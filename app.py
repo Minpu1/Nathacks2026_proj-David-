@@ -7,11 +7,11 @@ from storage import load_data, save_data
 
 # --- Configuration & Setup ---
 TOWER_COORDS = {
-    "Henday Hall": (53.52155, -113.52950),     
-    "Mackenzie Hall": (53.52155, -113.53120),  
-    "Kelsey Hall": (53.52240, -113.53150),     
-    "Shaffer Hall": (53.52320, -113.53050),    
-    "Chalifoux Hall": (53.52250, -113.52920),  
+    "Henday Hall": (53.52119827024105, -113.53060577851979),     
+    "Mackenzie Hall": (53.521327840257364, -113.53172497898909),  
+    "Kelsey Hall": (53.522029186520335, -113.5317608351634),     
+    "Shaffer Hall": (53.52248095835739, -113.53156635838),    
+    "Chalifoux Hall": (53.520643630132334, -113.5313884780551),  
 }
 
 TOWER_FLOORS = {
@@ -21,14 +21,19 @@ TOWER_FLOORS = {
 
 URGENCY_COLORS = {"High": "red", "Medium": "orange", "Low": "blue"}
 
+# (north-south, east-west) shift in degrees. 0.0001 is roughly 11 m north-south.
+ZONE_OFFSETS = {
+    "North Wing": (0.0001, 0), "South Wing": (-0.0001, 0),
+    "West Stairwell": (0, -0.00012), "East Stairwell": (0, 0.00012),
+}
+
 
 # --- UI Functions ---
 
 def init_session_state():
-    """Initializes session state variables to prevent reset bugs on reload."""
-    if "lat" not in st.session_state:
-        st.session_state["lat"] = None
-        st.session_state["lon"] = None
+    st.session_state.setdefault("lat", None)
+    st.session_state.setdefault("lon", None)
+    st.session_state.setdefault("map_id", 0)
 
 def render_student_view():
     """Renders the mobile-friendly student reporting form and custom map."""
@@ -40,33 +45,41 @@ def render_student_view():
     raw_text = st.text_area("What happened? (Include exact room number)")
 
     st.write("📍 **Optional: Tap on the map to pin the exact location**")
-    
-    # Render the pin map
-    pin_map = folium.Map(location=[53.5222, -113.5310], zoom_start=17)
-    pin_map.add_child(folium.ClickForMarker(popup="Incident Location"))
-    map_interaction = st_folium(pin_map, height=300, use_container_width=True)
-    
-    # Save tap coordinates to session state
-    if map_interaction and map_interaction.get("last_clicked"):
-        st.session_state["lat"] = map_interaction["last_clicked"]["lat"]
-        st.session_state["lon"] = map_interaction["last_clicked"]["lng"]
-        st.success("✅ Custom location pinned!")
 
-    # Handle submission
+    pin_map = folium.Map(location=[53.5222, -113.5310], zoom_start=18)
+    if st.session_state["lat"] is not None:
+        folium.Marker(
+            [st.session_state["lat"], st.session_state["lon"]],
+            tooltip="Your pin",
+        ).add_to(pin_map)
+
+    map_interaction = st_folium(
+        pin_map, height=300, use_container_width=True,
+        key=f"pin_map_{st.session_state['map_id']}",
+        returned_objects=["last_clicked"],
+    )
+
+    click = map_interaction.get("last_clicked") if map_interaction else None
+    if click and (click["lat"], click["lng"]) != (st.session_state["lat"], st.session_state["lon"]):
+        st.session_state["lat"] = click["lat"]
+        st.session_state["lon"] = click["lng"]
+        st.rerun()
+
+    if st.session_state["lat"] is not None:
+        st.success("✅ Location pinned!")
+
     if st.button("Submit Confidential Report"):
-        result = process_incident(raw_text)
-        
-        # NOTE: Make sure your save_data function in storage.py matches these exact arguments
-        save_data(
-            building, floor, zone, 
-            result["scrubbed_text"], result["category"], result["urgency"],
-            st.session_state["lat"], st.session_state["lon"]
-        )
-        st.success(f"Logged under '{result['category']}' for the RA team.")
-        
-        # Clear the map memory for the next user
-        st.session_state["lat"] = None
-        st.session_state["lon"] = None
+        if not raw_text.strip():
+            st.warning("Please describe what happened first.")
+        else:
+            result = process_incident(raw_text)
+            save_data(building, floor, zone,
+                      result["scrubbed_text"], result["category"], result["urgency"],
+                      st.session_state["lat"], st.session_state["lon"])
+            st.success(f"Logged under '{result['category']}' for the RA team.")
+            st.session_state["lat"] = None
+            st.session_state["lon"] = None
+            st.session_state["map_id"] += 1
 
 def build_ra_map(filtered_df):
     """Builds and returns the Folium map containing the incident markers."""
@@ -79,8 +92,9 @@ def build_ra_map(filtered_df):
             lon = row["longitude"]
         else:
             base_lat, base_lon = TOWER_COORDS.get(row["building"], (53.5222, -113.5310))
-            lat = base_lat + ((idx % 5) - 2) * 0.00005
-            lon = base_lon + (((idx // 5) % 5) - 2) * 0.00005
+            dlat, dlon = ZONE_OFFSETS.get(row["zone"], (0, 0))
+            lat = base_lat + dlat + ((idx % 5) - 2) * 0.00002
+            lon = base_lon + dlon + (((idx // 5) % 5) - 2) * 0.00002
 
         color = URGENCY_COLORS.get(row["urgency"], "blue")
         
