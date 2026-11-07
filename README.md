@@ -39,11 +39,14 @@ Residence safety and maintenance relies heavily on fragmented communication. Stu
    pip install -r requirements.txt
    ```
 
-3. **Start the application:**
+3. **Start the application RA:**
    ```bash
-   streamlit run app.py
+   streamlit run ra_app.py
    ```
-
-4. **Test the app:**
+4. **Start the application as student:**
+   ```bash
+   streamlit run student_app.py
+   ```
+5. **Test the app:**
    *   The app will automatically open in your browser at `http://localhost:8501`.
    *   Use the sidebar to toggle between the **Student Report (Phone)** view and the **RA Dashboard** view.
