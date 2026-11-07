@@ -1,73 +1,49 @@
-# Satelite image filter
-An ultra-efficient, low-compute **Edge AI / Computer Vision** pipeline designed to run directly on satellite hardware (e.g., CubeSats). It filters out "not worthy" images (cluttered with heavy clouds, fog, or empty ocean water) directly on orbit, ensuring that **only high-value, actionable data is transmitted back to Earth**. 
+# RA On-Shift Helper
 
-By processing pixels on the edge, this project eliminates the **Downlink Bottleneck**, saving up to 70% of satellite communication bandwidth and drastically reducing transmission costs.
+**natHacks 2026 Submission – Defense & Security (Infrastructure & Operational Security)**
 
----
+RA On-Shift Helper is a lightweight, mobile-responsive web application designed to bridge the gap between student residence incident reporting and Residence Assistant (RA) shift handoffs. It provides students with a confidential way to report maintenance, noise, and safety hazards, while giving RAs an interactive, geospatial dashboard to triage hotspots during their rounds.
 
-## 🚀 The Problem & Our Solution
+## The Problem
+Residence safety and maintenance relies heavily on fragmented communication. Students hesitate to report issues due to privacy concerns or clunky web portals, and RAs starting their shifts often inherit a disorganized list of overnight logs without a clear understanding of spatial hotspots (e.g., a clustered pattern of propped doors in a specific stairwell).
 
-- **The Problem:** Satellites capture terabytes of data daily, but over **70% of it is obscured by clouds** or contains empty features. Sending these raw, useless gigabytes to Earth wastes expensive radio channel bandwidth and delays critical imaging tasks.
-- **Our Solution:** Instead of heavy, energy-draining Deep Learning models that drain space batteries, we built a fast image analyzer using pure linear algebra and pixel matrix manipulation. It determines an image's worthiness in milliseconds using minimal CPU/RAM.
+## The Solution
+*   📱 **Student Mobile Interface:** A streamlined, mobile-friendly reporting tool that allows students to document incidents, tag specific building zones, and drop custom location pins via an interactive map.
+*   🛡️ **Privacy-First Triage:** The app automatically scrubs sensitive Personal Identifiable Information (PII) like phone numbers and student IDs locally before saving the report, protecting reporters while keeping essential data (like room numbers) intact for actionable response.
+*   🗺️ **Interactive Patrol Map:** RAs access a live dashboard with an OpenStreetMap overlay (powered by Folium) that clusters incidents over the exact footprints of the residence towers, color-coded by urgency.
+*   📊 **Shift Handoff Dashboard:** Visualizes incident hotspots by zone and allows RAs to filter by building or status, ensuring a clean transition between shifts.
 
----
+## Tech Stack
+*   **Frontend & Framework:** Streamlit (Python)
+*   **Mapping & Geospatial:** Folium, `streamlit-folium`
+*   **Data Processing & Storage:** Pandas, Regex (Local CSV storage for hackathon prototype)
 
-## 🛠️ Tech Stack
+## Project Structure
+*   `app.py` — The main Streamlit application containing the UI rendering and map logic.
+*   `privacy_triage.py` — The local text-processing engine that categorizes urgency and scrubs PII.
+*   `storage.py` — Handles reading, saving, and updating incident records.
+*   `incidents.csv` — The local database (pre-populated with 43 simulated overnight incidents for demonstration).
+*   `requirements.txt` — Required Python dependencies.
 
-- **Language:** Python 3.10+
-- **Image Processing:** Pillow (PIL) for efficient image asset loading and transformation.
-- **Core Engine:** NumPy for high-speed matrix calculations and pixel-level threshold analysis.
-- **Frontend Dashboard:** Streamlit for simulating the satellite's onboard environment or the ground control station.
-- **Version Control:** GitHub
+## How to Run Locally
 
----
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+   cd YOUR_REPO_NAME
+   ```
 
-## ⚙️ How It Works (The Logic)
+2. **Install the dependencies:**
+   Make sure you have Python installed, then run:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-The core algorithm processes images through a highly optimized pipeline:
-1. **Luminance & Contrast Mapping:** Pillow converts incoming satellite feeds into raw pixel arrays.
-2. **Cloud & Garbage Masking:** NumPy evaluates spatial noise and brightness matrices. If a specific threshold of white/gray pixels (representing heavy cloud cover) or uniform textures (empty open water) is crossed, the image is flagged as `DISCARD`.
-3. **Feature Density Verification:** Images with structural details, unique color variances, or high entropy are flagged as `WORTHY` and queued for high-priority Downlink transmission.
+3. **Start the application:**
+   ```bash
+   streamlit run app.py
+   ```
 
----
-
-## 🖥️ Live Dashboard Preview
-
-The **Streamlit** application allows operators to simulate the process:
-- Upload raw satellite image streams.
-- Dynamically adjust the Cloud/Waste Threshold sliders.
-- View real-time metrics on **Bandwidth Saved ($/MB)** and data prioritization.
-
----
-
-## 📦 Installation & Local Setup
-
-To run the satellite dashboard simulation locally, follow these steps:
-
-### 1. Clone the repository
-```bash
-git clone https://github.com
-cd YOUR_REPOSITORY_NAME
-```
-
-### 2. Install dependencies
-```bash
-pip install -r requirements.txt
-```
-*(Make sure your `requirements.txt` includes: `streamlit`, `numpy`, and `Pillow`)*
-
-### 3. Run the Streamlit Application
-```bash
-streamlit run app.py
-```
-Open your browser and navigate to `http://localhost:8501`.
-
----
-
-## 👥 Team & Hackathon Context
-Developed during the [Name of Hackathon] 2026. 
-
-- **[Your Name/Handle]** - Core Algorithm & NumPy Processing
-- **[Teammate Name]** - Streamlit Interface & Logic Integration
-
-*“Save the gigabytes, rescue the terabytes. Making space data instant.”*
+4. **Test the app:**
+   *   The app will automatically open in your browser at `http://localhost:8501`.
+   *   Use the sidebar to toggle between the **Student Report (Phone)** view and the **RA Dashboard** view.
