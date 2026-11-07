@@ -158,3 +158,8 @@ if __name__ == "__main__":
 
 #cd “c:\Users\LENOVO\OneDrive\Desktop\Github\Nathacks2026_proj”
 #streamlit run auth.py
+
+'''
+SUPABASE_URL="https://krayyvfhfmqfcsnidlyk.supabase.co/"
+SUPABASE_KEY="sb_publishable_8ZuNvfC62iTlwD7Aah9vxw_6xcDkGLs"
+'''
