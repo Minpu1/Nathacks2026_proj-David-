@@ -4,6 +4,7 @@ from storage import load_data, update_status  # Added update_status here!
 import streamlit as st
 from streamlit_folium import st_folium
 import pandas as pd
+from streamlit_autorefresh import st_autorefresh
 
 TOWER_COORDS = {
     "Henday Hall": (53.52119827024105, -113.53060577851979),
@@ -35,6 +36,11 @@ if not st.session_state["ra_authenticated"]:
 
 # --- RA DASHBOARD (Only loads after successful login) ---
 st.success("Authenticated as Resident Advisor")
+
+
+# Auto-refresh the page every 10 seconds
+st_autorefresh(interval=10000, limit=None, key="ra_dashboard_refresh")
+
 df = load_data()
 
 # Check if data is empty first!
