@@ -105,7 +105,7 @@ else:
   # --- INCIDENT CARDS ---
 
 @st.fragment
-def render_triage_board(dataframe):
+def render_triage_board(da):
   st.write("### 📋 Active Incident Cards & Triage")
 
   if filtered_df.empty:
