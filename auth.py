@@ -113,28 +113,31 @@ def require_login(allowed_roles=None):
 
 
 def show_user_sidebar(user):
-    """Sidebar block with the signed-in name, role, and a logout button."""
+    """
+    Sidebar block with the signed-in name, role, and a logout button.
+    Draws once per page run, so a second call from a page file is ignored.
+    """
+    run_id = st.session_state.get("_run_id")
+    if run_id is not None and st.session_state.get("_sidebar_run") == run_id:
+        return
+    st.session_state["_sidebar_run"] = run_id
+
     with st.sidebar:
         st.markdown(f"**{user['name']}**")
         st.caption(f"Role: {user['role'].upper()}")
-        if st.button("Log out", use_container_width=True):
+        if st.button("Log out", use_container_width=True, key="logout_btn"):
             st.session_state.pop("user", None)
             st.rerun()
-
-
-def ra_dashboard():
-    """Placeholder RA page until the dashboard is wired in."""
-    st.title("RA Dashboard")
-    st.info("RA view: the patrol dashboard goes here.")
 
 
 def main():
     """
     Entry point: streamlit run auth.py
     Shows the login form first. After sign-in, students are sent to the
-    student report page in student_app.py. RAs see the RA dashboard.
+    student report page in student_app.py. RAs are sent to ra_app.py.
     """
     st.set_page_config(page_title="RA On-Shift Helper", page_icon="🏠")
+    st.session_state["_run_id"] = st.session_state.get("_run_id", 0) + 1
     user = require_login()
     if user is None:
         # Happens when the file is run with plain python instead of streamlit.
@@ -145,10 +148,13 @@ def main():
     if user["role"] == "student":
         pages = [st.Page("student_app.py", title="Report an Incident", icon="📝")]
     else:
-        pages = [st.Page(ra_dashboard, title="RA Dashboard", icon="🗺️")]
+        pages = [st.Page("ra_app.py", title="RA Dashboard", icon="🗺️")]
 
     st.navigation(pages).run()
 
 
 if __name__ == "__main__":
     main()
+
+#cd “c:\Users\LENOVO\OneDrive\Desktop\Github\Nathacks2026_proj”
+#streamlit run auth.py
