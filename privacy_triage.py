@@ -2,12 +2,6 @@ import re
 
 
 def process_incident(raw_text):
-  # 1. Scrub phone numbers, emails, and 7-digit student IDs, but KEEP room numbers
-  scrubbed = re.sub(
-      r'\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b', '[PHONE REDACTED]', raw_text
-  )
-  scrubbed = re.sub(r'\b[\w\.-]+@[\w\.-]+\.\w+\b', '[EMAIL REDACTED]', scrubbed)
-  scrubbed = re.sub(r'\b\d{7}\b', '[ID REDACTED]', scrubbed)
 
   # 2. Classify incident category and urgency
   text_lower = raw_text.lower()
@@ -45,7 +39,7 @@ def process_incident(raw_text):
     category = 'Maintenance'
     urgency = 'Medium'
   else:
-    category = 'RA Next-Shift (Noise/Policy)'
+    category = 'Noise/Policy'
     urgency = 'Low'
 
-  return {'scrubbed_text': scrubbed, 'category': category, 'urgency': urgency}
+  return {'scrubbed_text': text_lower, 'category': category, 'urgency': urgency}
