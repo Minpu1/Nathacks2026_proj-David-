@@ -3,7 +3,6 @@ import pandas as pd
 from supabase import create_client
 import streamlit as st
 
-<<<<<<< HEAD
 # Initialize Supabase client safely with error catching
 try:
   url = st.secrets["SUPABASE_URL"]
@@ -16,8 +15,8 @@ except Exception as e:
 def load_data():
   """Fetches all incident rows from Supabase with safe empty & error handling."""
   empty_df = pd.DataFrame(columns=[
-      "timestamp", "building", "floor", "zone", 
-      "raw_text", "scrubbed_text", "category", "urgency", 
+      "timestamp", "building", "floor", "zone",
+      "raw_text", "scrubbed_text", "category", "urgency",
       "status", "latitude", "longitude"
   ])
 
@@ -28,13 +27,13 @@ def load_data():
   try:
     response = supabase.table("incidents").select("*").execute()
     data = response.data
-    
+
     # Check if table is empty
     if not data:
       return empty_df
-      
+
     return pd.DataFrame(data)
-    
+
   except Exception as e:
     st.error(f"⚠️ Error loading data from Supabase: {e}. Check if the 'incidents' table exists.")
     return empty_df
@@ -59,31 +58,13 @@ def save_data(building, floor, zone, raw_text, scrubbed_text, category, urgency,
         "status": "Open",
         "latitude": lat,
         "longitude": lon
-=======
-FILE_PATH = "incidents.csv"
-COLUMNS = ["timestamp", "building", "floor", "zone", "scrubbed_text",
-           "category", "urgency", "status", "latitude", "longitude"]
-
-def load_data():
-    if not os.path.exists(FILE_PATH) or os.path.getsize(FILE_PATH) == 0:
-        return pd.DataFrame(columns=COLUMNS)
-    return pd.read_csv(FILE_PATH).drop(columns=["raw_text"], errors="ignore")
-
-def save_data(building, floor, zone, scrubbed_text, category, urgency, lat=None, lon=None):
-    df = load_data()
-    new_row = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "building": building, "floor": floor, "zone": zone,
-        "scrubbed_text": scrubbed_text, "category": category,
-        "urgency": urgency, "status": "Open",
-        "latitude": lat, "longitude": lon,
->>>>>>> main
     }
     supabase.table("incidents").insert(new_row).execute()
     return True
   except Exception as e:
     st.error(f"⚠️ Failed to submit report to database: {e}")
     return False
+
 
 def update_status(row_id, new_status):
   """Updates an incident's status in the cloud database."""
@@ -96,20 +77,20 @@ def update_status(row_id, new_status):
     return True
   except Exception as e:
     st.error(f"⚠️ Failed to update status: {e}")
-    return False  
+    return False
+
 
 def check_duplicate(building, floor, category):
-    """Checks if an open incident of the same category exists in that location."""
-    if supabase is None:
-        return False
-        
-    try:
-        # Query for Open incidents in the same building, floor, and category
-        response = supabase.table("incidents").select("id").eq("status", "Open").eq("building", building).eq("floor", floor).eq("category", category).execute()
-        
-        # If the database returns any rows, a duplicate exists
-        if len(response.data) > 0:
-            return True
-        return False
-    except Exception as e:
-        return False
+  """Checks if an open incident of the same category exists in that location."""
+  if supabase is None:
+    return False
+
+  try:
+    response = (
+        supabase.table("incidents").select("id")
+        .eq("status", "Open").eq("building", building)
+        .eq("floor", floor).eq("category", category).execute()
+    )
+    return len(response.data) > 0
+  except Exception as e:
+    return False

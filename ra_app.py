@@ -105,7 +105,7 @@ else:
   # --- INCIDENT CARDS ---
 
 @st.fragment
-def render_triage_board(da):
+def render_triage_board(filtered_df):
   st.write("### 📋 Active Incident Cards & Triage")
 
   if filtered_df.empty:
@@ -143,3 +143,5 @@ def render_triage_board(da):
               st.rerun()
           else:
             st.success("Done ✓")
+if not (df.empty or "building" not in df.columns):
+  render_triage_board(filtered_df)
