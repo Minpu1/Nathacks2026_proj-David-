@@ -7,19 +7,13 @@ import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 from streamlit_folium import st_folium
 
+from places import MAP_CENTER, all_places, place_coords, place_label
 from storage import load_data, update_status
 from ui import apply_theme, page_title, site_footer
 
 st.set_page_config(page_title="RA Shift Handoff | Residence Safety", layout="wide")
 apply_theme("1180px")
 
-TOWER_COORDS = {
-    "Henday Hall": (53.52119827024105, -113.53060577851979),
-    "Mackenzie Hall": (53.521327840257364, -113.53172497898909),
-    "Kelsey Hall": (53.522029186520335, -113.5317608351634),
-    "Shaffer Hall": (53.52248095835739, -113.53156635838),
-    "Chalifoux Hall": (53.520643630132334, -113.5313884780551),
-}
 URGENCY_COLORS = {"High": "#B71C1C", "Medium": "#F2CD00", "Low": "#6B6B6B"}
 URGENCY_ORDER = {"High": 0, "Medium": 1, "Low": 2}
 BADGES = {
@@ -81,13 +75,13 @@ if df.empty or "building" not in df.columns:
 col1, col2 = st.columns(2)
 with col1:
     selected_building = st.selectbox(
-        "Filter by building", ["All towers"] + list(TOWER_COORDS.keys())
+        "Filter by location", ["All locations"] + all_places()
     )
 with col2:
     status_filter = st.selectbox("Filter by status", ["Open", "Resolved", "All"])
 
 filtered_df = df.copy()
-if selected_building != "All towers":
+if selected_building != "All locations":
     filtered_df = filtered_df[filtered_df["building"] == selected_building]
 if status_filter != "All":
     filtered_df = filtered_df[filtered_df["status"] == status_filter]
@@ -110,13 +104,13 @@ else:
         '<span><i style="background:#6B6B6B"></i>Low</span></div>',
         unsafe_allow_html=True,
     )
-    ra_map = folium.Map(location=[53.5222, -113.5310], zoom_start=17)
+    ra_map = folium.Map(location=list(MAP_CENTER), zoom_start=17)
 
     for idx, row in filtered_df.iterrows():
         if pd.notna(row.get("latitude")) and pd.notna(row.get("longitude")):
             lat, lon = row["latitude"], row["longitude"]
         else:
-            base_lat, base_lon = TOWER_COORDS.get(row["building"], (53.5222, -113.5310))
+            base_lat, base_lon = place_coords(row["building"])
             lat = base_lat + ((idx % 5) - 2) * 0.00005
             lon = base_lon + (((idx // 5) % 5) - 2) * 0.00005
 
@@ -124,7 +118,7 @@ else:
         popup_html = f"""
             <div style="width: 210px; font-family: Arial, sans-serif;">
                 <h4 style="margin: 0 0 4px 0; color: #275D38;">{html.escape(str(row['category']))}</h4>
-                <b>{html.escape(str(row['building']))} - {html.escape(str(row['floor']))}</b><br>
+                <b>{html.escape(place_label(row['building'], row['floor'], row['zone']))}</b><br>
                 <b>Status:</b> {html.escape(str(row['status']))}<br>
                 <hr style="margin: 5px 0;">
                 {html.escape(shown_text(row))}
@@ -167,8 +161,7 @@ def render_triage_board(filtered_df):
             with col_a:
                 st.markdown(
                     f'<span class="badge {css_class}">{label}</span> '
-                    f"<b>{html.escape(str(row['building']))} · "
-                    f"{html.escape(str(row['floor']))} · {html.escape(str(row['zone']))}</b>",
+                    f"<b>{html.escape(place_label(row['building'], row['floor'], row['zone']))}</b>",
                     unsafe_allow_html=True,
                 )
                 st.caption(f"{row['category']} · Logged {row['timestamp']}")

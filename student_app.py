@@ -7,28 +7,13 @@ from branca.element import MacroElement
 from jinja2 import Template
 from streamlit_folium import st_folium
 
+from places import (MAP_CENTER as MAP_CENTER_TUPLE, SHARED_FLOOR, SHARED_SPACES,
+                    SHARED_ZONE, TOWERS, ZONES)
 from privacy_triage import process_incident
 from storage import load_data, save_data
 from ui import apply_theme, notice, page_title, site_footer
 
-TOWER_FLOORS = {
-    "Henday Hall": 10,
-    "Mackenzie Hall": 11,
-    "Kelsey Hall": 10,
-    "Shaffer Hall": 12,
-    "Chalifoux Hall": 5,
-}
-ZONES = ["North Wing", "South Wing", "Main Lounge", "West Stairwell", "Exterior/Grounds"]
-MAP_CENTER = [53.5222, -113.5310]
-
-# Same positions as the RA app. Keep the two lists in sync.
-TOWER_COORDS = {
-    "Henday Hall": (53.52119827024105, -113.53060577851979),
-    "Mackenzie Hall": (53.521327840257364, -113.53172497898909),
-    "Kelsey Hall": (53.522029186520335, -113.5317608351634),
-    "Shaffer Hall": (53.52248095835739, -113.53156635838),
-    "Chalifoux Hall": (53.520643630132334, -113.5313884780551),
-}
+MAP_CENTER = list(MAP_CENTER_TUPLE)
 
 
 def meters_between(lat1, lon1, lat2, lon2):
@@ -42,8 +27,8 @@ def meters_between(lat1, lon1, lat2, lon2):
 
 
 def nearest_tower(lat, lon):
-    """Name of the building whose centre is closest to a map point."""
-    return min(TOWER_COORDS, key=lambda name: meters_between(lat, lon, *TOWER_COORDS[name]))
+    """Name of the residence tower whose centre is closest to a map point."""
+    return min(TOWERS, key=lambda name: meters_between(lat, lon, *TOWERS[name]["coords"]))
 
 
 class SinglePin(MacroElement):
@@ -113,11 +98,22 @@ notice(
 
 with st.container(key="card_where"):
     st.subheader("1. Where did it happen?")
-    building = st.selectbox("Building", list(TOWER_FLOORS.keys()))
-    floor = st.selectbox(
-        "Floor", [f"Floor {i}" for i in range(1, TOWER_FLOORS[building] + 1)]
+    place_type = st.radio(
+        "Type of place",
+        ["Residence tower", "Shared space"],
+        horizontal=True,
+        key=f"place_type_{st.session_state['map_id']}",
     )
-    zone = st.selectbox("Location zone", ZONES)
+    if place_type == "Residence tower":
+        building = st.selectbox("Building", list(TOWERS.keys()))
+        floor = st.selectbox(
+            "Floor", [f"Floor {i}" for i in range(1, TOWERS[building]["floors"] + 1)]
+        )
+        zone = st.selectbox("Location zone", ZONES)
+    else:
+        building = st.selectbox("Which space?", list(SHARED_SPACES.keys()))
+        floor = SHARED_FLOOR
+        zone = SHARED_ZONE
 
 with st.container(key="card_what"):
     st.subheader("2. What happened?")
@@ -151,7 +147,7 @@ with st.container(key="card_pin"):
 
     if st.session_state["lat"] is not None:
         closest = nearest_tower(st.session_state["lat"], st.session_state["lon"])
-        if closest != building and zone != "Exterior/Grounds":
+        if place_type == "Residence tower" and closest != building and zone != "Exterior/Grounds":
             st.warning(
                 f"Your marker is closest to {closest}, but you chose {building}. "
                 "Please check both before you submit."
