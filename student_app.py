@@ -1,4 +1,6 @@
 """STUDENT PORTAL.  Run with:  python -m streamlit run student_app.py --server.port 8510"""
+import math
+
 import folium
 import streamlit as st
 from branca.element import MacroElement
@@ -18,6 +20,30 @@ TOWER_FLOORS = {
 }
 ZONES = ["North Wing", "South Wing", "Main Lounge", "West Stairwell", "Exterior/Grounds"]
 MAP_CENTER = [53.5222, -113.5310]
+
+# Same positions as the RA app. Keep the two lists in sync.
+TOWER_COORDS = {
+    "Henday Hall": (53.52119827024105, -113.53060577851979),
+    "Mackenzie Hall": (53.521327840257364, -113.53172497898909),
+    "Kelsey Hall": (53.522029186520335, -113.5317608351634),
+    "Shaffer Hall": (53.52248095835739, -113.53156635838),
+    "Chalifoux Hall": (53.520643630132334, -113.5313884780551),
+}
+
+
+def meters_between(lat1, lon1, lat2, lon2):
+    """Straight-line distance between two map points, in metres."""
+    r = 6371000
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    a = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(
+        math.radians(lon2 - lon1) / 2
+    ) ** 2
+    return 2 * r * math.asin(math.sqrt(a))
+
+
+def nearest_tower(lat, lon):
+    """Name of the building whose centre is closest to a map point."""
+    return min(TOWER_COORDS, key=lambda name: meters_between(lat, lon, *TOWER_COORDS[name]))
 
 
 class SinglePin(MacroElement):
@@ -124,7 +150,14 @@ with st.container(key="card_pin"):
         st.session_state["lon"] = click["lng"]
 
     if st.session_state["lat"] is not None:
-        st.success("Location pinned")
+        closest = nearest_tower(st.session_state["lat"], st.session_state["lon"])
+        if closest != building and zone != "Exterior/Grounds":
+            st.warning(
+                f"Your marker is closest to {closest}, but you chose {building}. "
+                "Please check both before you submit."
+            )
+        else:
+            st.success("Location pinned")
 
 if st.button("Submit report", type="primary", key="submit_btn"):
     if not raw_text.strip():
