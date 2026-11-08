@@ -101,7 +101,8 @@ def authenticate(username: str, password: str):
     account = SAMPLE_ACCOUNTS.get(username)
     if account is not None:
         if hmac.compare_digest(account["password_hash"], _hash(password)):
-            return {"username": username, "role": account["role"], "name": account["name"]}
+            name = username if account["role"] == "ra" else account["name"]
+            return {"username": username, "role": account["role"], "name": name}
         return None
 
     row = _fetch_db_user(username)
@@ -111,11 +112,12 @@ def authenticate(username: str, password: str):
         return None
 
     if hmac.compare_digest(row["password_hash"], _pbkdf2(password, row["salt"])):
-        return {
-            "username": row["username"],
-            "role": row["role"],
-            "name": row.get("display_name") or row["username"],
-        }
+        # RAs are shown by username. Students use their display name.
+        if row["role"] == "ra":
+            name = row["username"]
+        else:
+            name = row.get("display_name") or row["username"]
+        return {"username": row["username"], "role": row["role"], "name": name}
     return None
 
 
@@ -126,6 +128,8 @@ def register_account(username, display_name, password, role, invite_code=""):
 
     if role not in ("student", "ra"):
         return False, "Choose a role."
+    if role == "ra":
+        display_name = username
     if not USERNAME_PATTERN.match(username):
         return False, "Usernames use 3 to 20 lowercase letters, numbers, or underscores."
     if len(password) < MIN_PASSWORD_LENGTH:
@@ -167,7 +171,7 @@ def register_account(username, display_name, password, role, invite_code=""):
 
 def _render_sign_in_tab():
     with st.form("login_form", clear_on_submit=False):
-        username = st.text_input("Username", placeholder="e.g. student1")
+        username = st.text_input("Username", placeholder="")
         password = st.text_input("Password", type="password")
         submitted = st.form_submit_button("Sign in", use_container_width=True)
 
@@ -193,7 +197,9 @@ def _render_sign_in_tab():
 
 def _render_register_tab():
     role_label = st.radio("I am a", ["Student", "RA"], horizontal=True, key="reg_role")
-    display_name = st.text_input("Display name", key="reg_display_name")
+    display_name = ""
+    if role_label == "Student":
+        display_name = st.text_input("Display name", key="reg_display_name")
     username = st.text_input("Username", key="reg_username")
     password = st.text_input("Password", type="password", key="reg_password")
     confirm = st.text_input("Confirm password", type="password", key="reg_confirm")
@@ -226,7 +232,62 @@ def show_login():
     st.markdown(
         """
         <style>
-        .block-container { max-width: 440px; padding-top: 3rem; }
+        /* Area outside the login block. Change this color to restyle it. */
+        .stApp,
+        [data-testid="stAppViewContainer"],
+        [data-testid="stMain"] {
+            background-color: #ededed !important;
+        }
+        [data-testid="stHeader"] { background: transparent !important; }
+
+        /* Login block, moved toward the center of the page */
+        .block-container {
+            max-width: 440px !important;
+            margin-top: 10vh !important;
+            margin-bottom: 100px !important;
+            padding: 2rem 2rem 2.5rem 2rem !important;
+            background-color: #ffffff;
+            border-radius: 0;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Green borders across the top and bottom of the login page */
+        .stApp::before,
+        .stApp::after {
+            content: "";
+            position: fixed;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #275d38;
+            z-index: 999999;
+            pointer-events: none;
+        }
+        .stApp::before { top: 0; }
+        .stApp::after { bottom: 0; }
+
+        /* Input bars and buttons: light blue fill with black text */
+        .stTextInput div[data-baseweb="input"],
+        .stTextInput div[data-baseweb="input"] div,
+        .stTextInput div[data-baseweb="base-input"],
+        .stTextInput [data-testid="stTextInputRootElement"],
+        .stTextInput [data-testid="stTextInputRootElement"] div,
+        .stTextInput input,
+        .stTextInput button {
+            background-color: #e8f0fe !important;
+            color: #000000 !important;
+        }
+        .stTextInput input::placeholder { color: #555555 !important; }
+        .stTextInput button svg { fill: #000000 !important; }
+
+        .stFormSubmitButton button,
+        .stButton button {
+            background-color: #e8f0fe !important;
+            color: #000000 !important;
+            border: 1px solid #b9c9e6 !important;
+        }
+        .stFormSubmitButton button p,
+        .stButton button p { color: #000000 !important; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -240,14 +301,6 @@ def show_login():
     with register_tab:
         _render_register_tab()
 
-    with st.expander("Test accounts"):
-        st.table(
-            {
-                "Username": ["student1", "student2", "ra1", "ra2"],
-                "Password": ["student123", "student456", "ra12345", "ra67890"],
-                "Role": ["Student", "Student", "RA", "RA"],
-            }
-        )
 
 
 def require_login(allowed_roles=None):
@@ -313,10 +366,13 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 #cd “c:\Users\LENOVO\OneDrive\Desktop\Github\Nathacks2026_proj”
 #streamlit run auth.py
 
 
 #SUPABASE_URL="https://krayyvfhfmqfcsnidlyk.supabase.co/"
 #SUPABASE_KEY="sb_publishable_8ZuNvfC62iTlwD7Aah9vxw_6xcDkGLs"
+#SUPABASE_URL="https://krayyvfhfmqfcsnidlyk.supabase.co/"
+#SUPABASE_KEY="sb_publishable_8ZuNvfC62iTlwD7Aah9vxw_6xcDkGLs"
+#cd “c:\Users\LENOVO\OneDrive\Desktop\Github\Nathacks2026_proj”
+#streamlit run auth.py
