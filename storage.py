@@ -1,3 +1,4 @@
+from timeutil import now_local
 from datetime import datetime
 import pandas as pd
 from supabase import create_client
@@ -47,7 +48,7 @@ def save_data(building, floor, zone, raw_text, scrubbed_text, category, urgency,
 
   try:
     new_row = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "timestamp": now_local().strftime("%Y-%m-%d %H:%M"),
         "building": building,
         "floor": floor,
         "zone": zone,

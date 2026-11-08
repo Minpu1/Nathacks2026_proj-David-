@@ -1,4 +1,5 @@
 """RA PORTAL.  Run with:  python -m streamlit run ra_app.py --server.port 8502"""
+import hmac
 import html
 
 import folium
@@ -9,6 +10,7 @@ from streamlit_folium import st_folium
 
 from places import MAP_CENTER, all_places, place_coords, place_label
 from storage import load_data, update_status
+from timeutil import OVERDUE_AFTER_MIN, human_age, now_naive, parse_times
 from ui import apply_theme, page_title, site_footer
 
 st.set_page_config(page_title="RA Shift Handoff | Residence Safety", layout="wide")
@@ -32,11 +34,18 @@ def shown_text(row):
     return ""
 
 
+def get_passcode():
+    """The RA passcode lives in the app's secrets, never in the code."""
+    try:
+        value = str(st.secrets["RA_PASSWORD"])
+        return value or None
+    except Exception:
+        return None
+
+
 page_title("RA Shift Handoff", "Every report from residence, sorted by urgency.")
 
 # --- PASSWORD PROTECTION GATE ---
-RA_PASSWORD = "admin"  # Set your hackathon passcode here
-
 if "ra_authenticated" not in st.session_state:
     st.session_state["ra_authenticated"] = False
 
@@ -45,13 +54,20 @@ if not st.session_state["ra_authenticated"]:
     with middle:
         with st.container(key="card_login"):
             st.subheader("Authorized personnel only")
-            entered_password = st.text_input("RA passcode", type="password")
-            if st.button("Log in", type="primary", key="login_btn"):
-                if entered_password == RA_PASSWORD:
-                    st.session_state["ra_authenticated"] = True
-                    st.rerun()
-                else:
-                    st.error("Incorrect passcode. Access denied.")
+            passcode = get_passcode()
+            if passcode is None:
+                st.error(
+                    "No RA passcode is set. Add a line  RA_PASSWORD=\"...\"  to the app's "
+                    "secrets, then restart the app."
+                )
+            else:
+                entered_password = st.text_input("RA passcode", type="password")
+                if st.button("Log in", type="primary", key="login_btn"):
+                    if hmac.compare_digest(entered_password, passcode):
+                        st.session_state["ra_authenticated"] = True
+                        st.rerun()
+                    else:
+                        st.error("Incorrect passcode. Access denied.")
     site_footer()
     st.stop()
 
@@ -72,6 +88,21 @@ if df.empty or "building" not in df.columns:
     site_footer()
     st.stop()
 
+# --- How long has each report been open? Flag the ones that waited too long. ---
+df["timestamp"] = parse_times(df["timestamp"])
+df["age_min"] = (now_naive() - df["timestamp"]).dt.total_seconds() / 60
+limits = df["urgency"].map(OVERDUE_AFTER_MIN).fillna(OVERDUE_AFTER_MIN["Low"])
+df["overdue"] = (df["status"] == "Open") & (df["age_min"] > limits)
+
+overdue_total = int(df["overdue"].sum())
+if overdue_total:
+    st.markdown(
+        f'<div class="alert-bar"><b>{overdue_total} overdue.</b> '
+        "These open reports have waited longer than their target response time "
+        "(High 15 min, Medium 2 h, Low 24 h).</div>",
+        unsafe_allow_html=True,
+    )
+
 col1, col2 = st.columns(2)
 with col1:
     selected_building = st.selectbox(
@@ -87,10 +118,11 @@ if status_filter != "All":
     filtered_df = filtered_df[filtered_df["status"] == status_filter]
 
 # --- Summary tiles ---
-m1, m2, m3 = st.columns(3)
+m1, m2, m3, m4 = st.columns(4)
 m1.metric("Shown", len(filtered_df))
 m2.metric("High urgency", int((filtered_df["urgency"] == "High").sum()))
-m3.metric("Resolved", int((filtered_df["status"] == "Resolved").sum()))
+m3.metric("Overdue", int(filtered_df["overdue"].sum()))
+m4.metric("Resolved", int((filtered_df["status"] == "Resolved").sum()))
 
 # --- DRAW MAP ---
 st.subheader("Patrol map")
@@ -127,8 +159,8 @@ else:
         folium.CircleMarker(
             location=[lat, lon],
             radius=9,
-            color="#1F1F1F",
-            weight=1,
+            color="#B71C1C" if row["overdue"] else "#1F1F1F",
+            weight=3 if row["overdue"] else 1,
             fill=True,
             fill_color=color,
             fill_opacity=0.95,
@@ -141,30 +173,35 @@ else:
 # --- INCIDENT CARDS ---
 @st.fragment
 def render_triage_board(filtered_df):
-    st.subheader("Incidents, most urgent first")
+    st.subheader("Incidents: overdue first, then most urgent")
 
     if filtered_df.empty:
         st.info("No incidents match your current filter.")
         return
 
     ranked = filtered_df.assign(
-        _rank=filtered_df["urgency"].map(URGENCY_ORDER).fillna(3)
-    ).sort_values(["_rank", "timestamp"], ascending=[True, False])
+        _late=(~filtered_df["overdue"]).astype(int),
+        _rank=filtered_df["urgency"].map(URGENCY_ORDER).fillna(3),
+    ).sort_values(["_late", "_rank", "timestamp"], ascending=[True, True, True])
 
     for idx, row in ranked.iterrows():
         uid = row.get("id", idx)
         css_class, label = BADGES.get(row["urgency"], ("low", "LOW"))
+        logged = row["timestamp"].strftime("%b %d, %H:%M") if pd.notna(row["timestamp"]) else "unknown time"
+        open_for = f" · Open for {human_age(row['age_min'])}" if row["status"] == "Open" else ""
+        card_key = f"card_incident_{'overdue_' if row['overdue'] else ''}{uid}"
 
-        with st.container(key=f"card_incident_{uid}"):
+        with st.container(key=card_key):
             col_a, col_b = st.columns([5, 1])
 
             with col_a:
+                overdue_badge = '<span class="badge overdue">OVERDUE</span>' if row["overdue"] else ""
                 st.markdown(
-                    f'<span class="badge {css_class}">{label}</span> '
+                    f'<span class="badge {css_class}">{label}</span>{overdue_badge}'
                     f"<b>{html.escape(place_label(row['building'], row['floor'], row['zone']))}</b>",
                     unsafe_allow_html=True,
                 )
-                st.caption(f"{row['category']} · Logged {row['timestamp']}")
+                st.caption(f"{row['category']} · Logged {logged}{open_for}")
                 st.write(shown_text(row))
 
             with col_b:

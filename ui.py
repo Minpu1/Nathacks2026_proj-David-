@@ -92,6 +92,13 @@ header[data-testid="stHeader"]::before {
 .badge.low { background: #6B6B6B; color: #FFFFFF; }
 .badge.done { background: #E8F0EA; color: var(--green); border: 1px solid var(--green); }
 
+.badge.overdue { background: #FFFFFF; color: #B71C1C; border: 1px solid #B71C1C; }
+.alert-bar {
+    border-left: 6px solid #B71C1C; background: #FDECEC; color: var(--text);
+    padding: 0.8rem 1rem; margin-bottom: 1rem; font-weight: 500;
+}
+[class*="st-key-card_incident_overdue"] { border-left: 6px solid #B71C1C; }
+
 .legend span { display: inline-block; margin-right: 1.2rem; font-size: 0.9rem; color: var(--muted); }
 .legend i { display: inline-block; width: 0.8rem; height: 0.8rem; margin-right: 0.35rem; vertical-align: -1px; }
 
